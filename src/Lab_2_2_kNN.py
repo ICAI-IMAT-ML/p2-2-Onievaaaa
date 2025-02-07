@@ -8,18 +8,19 @@ import seaborn as sns
 
 def minkowski_distance(a, b, p=2):
     """
-    Compute the Minkowski distance between two arrays.
+    Compute the      distance between two arrays.
 
     Args:
         a (np.ndarray): First array.
         b (np.ndarray): Second array.
         p (int, optional): The degree of the Minkowski distance. Defaults to 2 (Euclidean distance).
-
     Returns:
         float: Minkowski distance between arrays a and b.
     """
-
-    # TODO
+    sum = 0
+    for i in range(len(a)):
+        sum += abs(a[i] - b[i])**p
+    return sum**(1/p)
 
 
 # k-Nearest Neighbors Model
@@ -50,7 +51,13 @@ class knn:
             k (int, optional): Number of neighbors to use. Defaults to 5.
             p (int, optional): The degree of the Minkowski distance. Defaults to 2.
         """
-        # TODO
+        if k > 0 and type(k) == int:
+            self.k = k
+        if p > 0 and type(p) == int:
+            self.p = p
+        if len(X_train) == len(y_train):
+            self.x_train = X_train
+            self.y_train = y_train
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
