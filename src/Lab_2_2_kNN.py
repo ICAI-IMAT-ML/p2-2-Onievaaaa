@@ -77,17 +77,10 @@ class knn:
         """
         predicciones = []
         for xi in X:
-            distancias = np.array([minkowski_distance(xi, x_train, self.p) for x_train in self.x_train])
-            indices_vecinos = np.argsort(distancias)[:self.k]
+            distancias = self.compute_distances(xi)
+            indices_vecinos = self.get_k_nearest_neighbors(distancias)
             vecinos_etiquetas = self.y_train[indices_vecinos]
-            repeticiones = {}
-            for etiqueta in vecinos_etiquetas:
-                repeticiones[etiqueta] = repeticiones.get(etiqueta, 0) + 1
-
-            mas_comun = list(repeticiones.keys())[0]
-            for etiqueta in repeticiones:
-                if repeticiones[etiqueta] > repeticiones[mas_comun]:
-                    mas_comun = etiqueta
+            mas_comun = self.most_common_label(vecinos_etiquetas)
             predicciones.append(mas_comun)
         
         return np.array(predicciones)
@@ -106,8 +99,20 @@ class knn:
         Returns:
             np.ndarray: Predicted class probabilities.
         """
-        # TODO
-
+        probabilidades = []
+        clases_unicas = list(set(self.y_train))  # Obtener las clases únicas presentes en el entrenamiento
+        for xi in X:
+            distancias = self.compute_distances(xi)
+            indices_vecinos = self.get_k_nearest_neighbors(distancias)
+            vecinos_etiquetas = self.y_train[indices_vecinos]
+            repeticiones = {}
+            for etiqueta in vecinos_etiquetas:
+                repeticiones[etiqueta] = repeticiones.get(etiqueta, 0) + 1
+            probas = []
+            for clase in clases_unicas:
+                probas.append(repeticiones[clase] / self.k )
+            probabilidades.append(probas)
+        return np.array(probabilidades)
     def compute_distances(self, point: np.ndarray) -> np.ndarray:
         """Compute distance from a point to every point in the training dataset
 
@@ -117,7 +122,10 @@ class knn:
         Returns:
             np.ndarray: distance from point to each point in the training dataset.
         """
-        # TODO
+        distancias = []
+        for xi in self.x_train:
+            distancias.append(minkowski_distance(point, xi, self.p))
+        return np.array(distancias)
 
     def get_k_nearest_neighbors(self, distances: np.ndarray) -> np.ndarray:
         """Get the k nearest neighbors indices given the distances matrix from a point.
@@ -131,7 +139,7 @@ class knn:
         Hint:
             You might want to check the np.argsort function.
         """
-        # TODO
+        return np.argsort(distances)[:self.k]
 
     def most_common_label(self, knn_labels: np.ndarray) -> int:
         """Obtain the most common label from the labels of the k nearest neighbors
@@ -142,8 +150,15 @@ class knn:
         Returns:
             int: most common label
         """
-        # TODO
-
+        repeticiones = {}
+        for etiqueta in knn_labels:
+            repeticiones[etiqueta] = repeticiones.get(etiqueta, 0) + 1
+    
+        mas_comun = list(repeticiones.keys())[0]
+        for etiqueta in repeticiones:
+            if repeticiones[etiqueta] > repeticiones[mas_comun]:
+                mas_comun = etiqueta
+        return mas_comun
     def __str__(self):
         """
         String representation of the kNN model.
