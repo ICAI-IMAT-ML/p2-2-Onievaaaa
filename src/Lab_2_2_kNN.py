@@ -53,11 +53,17 @@ class knn:
         """
         if k > 0 and type(k) == int:
             self.k = k
+        else:
+            raise ValueError('k and p must be positive integers.')
         if p > 0 and type(p) == int:
             self.p = p
+        else:
+            raise ValueError('k and p must be positive integers.')
         if len(X_train) == len(y_train):
             self.x_train = X_train
             self.y_train = y_train
+        else:
+            raise ValueError('Length of X_train and y_train must be equal.')
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -69,7 +75,23 @@ class knn:
         Returns:
             np.ndarray: Predicted class labels.
         """
-        # TODO
+        predicciones = []
+        for xi in X:
+            distancias = np.array([minkowski_distance(xi, x_train, self.p) for x_train in self.x_train])
+            indices_vecinos = np.argsort(distancias)[:self.k]
+            vecinos_etiquetas = self.y_train[indices_vecinos]
+            repeticiones = {}
+            for etiqueta in vecinos_etiquetas:
+                repeticiones[etiqueta] = repeticiones.get(etiqueta, 0) + 1
+
+            mas_comun = list(repeticiones.keys())[0]
+            for etiqueta in repeticiones:
+                if repeticiones[etiqueta] > repeticiones[mas_comun]:
+                    mas_comun = etiqueta
+            predicciones.append(mas_comun)
+        
+        return np.array(predicciones)
+
 
     def predict_proba(self, X):
         """
