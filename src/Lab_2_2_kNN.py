@@ -1,4 +1,4 @@
-# Laboratory practice 2.2: KNN classification
+#Laboratory practice 2.2: KNN classification
 import seaborn as sns
 import matplotlib.pyplot as plt
 sns.set_theme()
@@ -100,7 +100,7 @@ class knn:
             np.ndarray: Predicted class probabilities.
         """
         probabilidades = []
-        clases_unicas = list(set(self.y_train))  # Obtener las clases únicas presentes en el entrenamiento
+        clases_unicas = list(set(self.y_train)) 
         for xi in X:
             distancias = self.compute_distances(xi)
             indices_vecinos = self.get_k_nearest_neighbors(distancias)
@@ -153,7 +153,6 @@ class knn:
         repeticiones = {}
         for etiqueta in knn_labels:
             repeticiones[etiqueta] = repeticiones.get(etiqueta, 0) + 1
-    
         mas_comun = list(repeticiones.keys())[0]
         for etiqueta in repeticiones:
             if repeticiones[etiqueta] > repeticiones[mas_comun]:
@@ -257,28 +256,45 @@ def evaluate_classification_metrics(y_true, y_pred, positive_label):
         - Specificity: TN / (TN + FP)
         - F1 Score: 2 * (Precision * Recall) / (Precision + Recall)
     """
-    # Map string labels to 0 or 1
-    y_true_mapped = np.array([1 if label == positive_label else 0 for label in y_true])
-    y_pred_mapped = np.array([1 if label == positive_label else 0 for label in y_pred])
+    y_true_mapeado = np.array([1 if label == positive_label else 0 for label in y_true])
+    y_pred_mapeado = np.array([1 if label == positive_label else 0 for label in y_pred])
 
-    # Confusion Matrix
-    # TODO
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
 
-    # Accuracy
-    # TODO
+    for i in range(len(y_true_mapeado)):
+        if y_true_mapeado[i] == 1 and y_pred_mapeado[i] == 1:
+            tp += 1  
+        elif y_true_mapeado[i] == 0 and y_pred_mapeado[i] == 0:
+            tn += 1  
+        elif y_true_mapeado[i] == 0 and y_pred_mapeado[i] == 1:
+            fp += 1  
+        elif y_true_mapeado[i] == 1 and y_pred_mapeado[i] == 0:
+            fn += 1  
 
-    # Precision
-    # TODO
-
-    # Recall (Sensitivity)
-    # TODO
-
-    # Specificity
-    # TODO
-
-    # F1 Score
-    # TODO
-
+    total = tp + tn + fp + fn
+    if total > 0:
+        accuracy = (tp + tn) / total 
+    else:
+        accuracy = 0
+    if (tp + fp) > 0:
+        precision = tp / (tp + fp)
+    else:
+        precision = 0
+    if (tp + fn) > 0:
+        recall = tp / (tp + fn)
+    else:
+        recall = 0
+    if (tn + fp) > 0:
+        specificity = tn / (tn + fp) 
+    else:
+        specificity = 0
+    if (precision + recall):
+        f1 = (2 * precision * recall) / (precision + recall) 
+    else:
+        f1 = 0
     return {
         "Confusion Matrix": [tn, fp, fn, tp],
         "Accuracy": accuracy,
@@ -287,8 +303,6 @@ def evaluate_classification_metrics(y_true, y_pred, positive_label):
         "Specificity": specificity,
         "F1 Score": f1,
     }
-
-
 
 def plot_calibration_curve(y_true, y_probs, positive_label, n_bins=10):
     """
@@ -313,8 +327,31 @@ def plot_calibration_curve(y_true, y_probs, positive_label, n_bins=10):
             - "true_proportions": Array of the fraction of positives in each bin
 
     """
-    # TODO
-    return {"bin_centers": bin_centers, "true_proportions": true_proportions}
+    y_true_mapped =  np.array([1 if label == positive_label else 0 for label in y_true])
+    bin_limites = np.linspace(0, 1, n_bins + 1)
+    bin_centers = (bin_limites[:-1] + bin_limites[1:]) / 2 
+
+    true_proportions = np.zeros(n_bins)
+
+    bin_indices = np.digitize(y_probs, bin_limites) - 1  
+
+    for i in range(n_bins):
+        indices_en_bin = np.where(bin_indices == i)[0]
+        if len(indices_en_bin) > 0:
+            true_proportions[i] = np.mean(y_true_mapped[indices_en_bin])
+
+    bin_centers = np.array(bin_centers)
+    true_proportions = np.array(true_proportions)
+    plt.figure(figsize=(6, 6))
+    plt.plot(bin_centers, true_proportions, marker="o", linestyle="-", label="Modelo")
+    plt.plot([0, 1], [0, 1], linestyle="--", color="gray", label="Correctamente calibrado")
+    plt.xlabel("Probabilidad promedio predicha")
+    plt.ylabel("Fracción de positivos")
+    plt.title("Curva de calibración")
+    plt.legend()
+    plt.show()
+    return {"bin_centers":bin_centers, 
+            "true_proportions": true_proportions}
 
 
 
@@ -343,11 +380,21 @@ def plot_probability_histograms(y_true, y_probs, positive_label, n_bins=10):
                 Array of predicted probabilities for the negative class.
 
     """
-    # TODO
+    y_true_mapeado = np.array([1 if label == positive_label else 0 for label in y_true])
+    prob_pos = y_probs[y_true_mapeado == 1]
+    prob_neg = y_probs[y_true_mapeado == 0]
+    
+    plt.figure(figsize=(10, 5))
+    plt.hist(prob_pos, bins=n_bins, alpha=0.5, label='Positivo')
+    plt.hist(prob_neg, bins=n_bins, alpha=0.5, label='Negativo')
+    plt.xlabel('Probabilidad predicha')
+    plt.ylabel('Frecuencia')
+    plt.legend()
+    plt.show()
 
     return {
-        "array_passed_to_histogram_of_positive_class": y_probs[y_true_mapped == 1],
-        "array_passed_to_histogram_of_negative_class": y_probs[y_true_mapped == 0],
+        "array_passed_to_histogram_of_positive_class": prob_pos,
+        "array_passed_to_histogram_of_negative_class": prob_neg,
     }
 
 
@@ -373,5 +420,23 @@ def plot_roc_curve(y_true, y_probs, positive_label):
             - "tpr": Array of True Positive Rates for each threshold.
 
     """
-    # TODO
-    return {"fpr": np.array(fpr), "tpr": np.array(tpr)}
+    y_true_bin = np.array([1 if label == positive_label else 0 for label in y_true])
+    thresholds = np.linspace(0, 1, 11)
+    tpr_list = []
+    fpr_list = []
+    
+    for thresh in thresholds:
+        y_pred = (y_probs >= thresh).astype(int)
+        tp = np.sum((y_true_bin == 1) & (y_pred == 1))
+        fp = np.sum((y_true_bin == 0) & (y_pred == 1))
+        fn = np.sum((y_true_bin == 1) & (y_pred == 0))
+        tn = np.sum((y_true_bin == 0) & (y_pred == 0))
+        
+        tpr = tp / (tp + fn) if (tp + fn) != 0 else 0.0
+        fpr = fp / (fp + tn) if (fp + tn) != 0 else 0.0
+        
+        tpr_list.append(tpr)
+        fpr_list.append(fpr)
+
+    
+    return {"fpr": np.array(fpr_list), "tpr": np.array(tpr_list)}
