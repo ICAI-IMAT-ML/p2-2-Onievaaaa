@@ -115,7 +115,6 @@ class knn:
         return np.array(probabilidades)
     def compute_distances(self, point: np.ndarray) -> np.ndarray:
         """Compute distance from a point to every point in the training dataset
-
         Args:
             point (np.ndarray): data sample.
 
